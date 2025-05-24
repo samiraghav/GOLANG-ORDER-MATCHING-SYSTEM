@@ -17,7 +17,6 @@ A simplified stock exchange style order matching engine built in Go. Supports bu
 
 ```bash
 git clone https://github.com/samiraghav/GOLANG-ORDER-MATCHING-SYSTEM.git
-cd order-matching-engine
 ```
 
 ### 2. Install Go Modules

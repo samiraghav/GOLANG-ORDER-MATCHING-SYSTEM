@@ -53,7 +53,7 @@ go run main.go
 
 ```
 Connected to MySQL
-Listening on :8080
+Listening and serving HTTP on :8080
 ```
 
 ## API Endpoints

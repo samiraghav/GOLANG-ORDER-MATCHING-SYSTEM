@@ -8,11 +8,13 @@ import (
 )
 
 func main() {
-	db.Connect()
+	if err := db.Connect(); err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
 
 	r := router.SetupRouter()
 	fmt.Println("Server running at http://localhost:8080")
 	if err := r.Run(":8080"); err != nil {
-		log.Fatal("Failed to run server: ", err)
+		log.Fatalf("Failed to run server: %v", err)
 	}
 }

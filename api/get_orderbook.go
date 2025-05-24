@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"order-matching-engine/db"
+	"order-matching-engine/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,23 +11,23 @@ import (
 func GetOrderBook(c *gin.Context) {
 	symbol := c.Query("symbol")
 	if symbol == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "symbol is required"})
+		utils.SendError(c, http.StatusBadRequest, "Symbol is required")
 		return
 	}
 
 	buyOrders, err := db.GetOrdersBySymbolAndSide(symbol, "buy")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch buy orders"})
+		utils.SendError(c, http.StatusInternalServerError, "Failed to fetch buy orders")
 		return
 	}
 
 	sellOrders, err := db.GetOrdersBySymbolAndSide(symbol, "sell")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch sell orders"})
+		utils.SendError(c, http.StatusInternalServerError, "Failed to fetch sell orders")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	utils.SendSuccess(c, http.StatusOK, "Order book fetched", map[string]interface{}{
 		"symbol":      symbol,
 		"buy_orders":  buyOrders,
 		"sell_orders": sellOrders,

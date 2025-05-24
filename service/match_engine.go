@@ -1,9 +1,9 @@
 package service
 
 import (
-	"log"
 	"order-matching-engine/db"
 	"order-matching-engine/models"
+	"order-matching-engine/utils"
 	"sort"
 	"time"
 )
@@ -17,6 +17,11 @@ func MatchOrder(order models.Order) {
 
 	orders, err := db.GetOpenOrders(order.Symbol, oppositeSide)
 	if err != nil || len(orders) == 0 {
+		utils.LogError("MatchOrder:GetOpenOrders", map[string]interface{}{
+			"error":  err.Error(),
+			"symbol": order.Symbol,
+			"side":   oppositeSide,
+		})
 		return
 	}
 
@@ -27,7 +32,10 @@ func MatchOrder(order models.Order) {
 		timeJ, err2 := time.Parse(layout, orders[j].CreatedAt)
 
 		if err1 != nil || err2 != nil {
-			log.Println("Time parse error in order sorting:", err1, err2)
+			utils.LogError("MatchOrder:TimeParse", map[string]interface{}{
+				"err1": err1.Error(),
+				"err2": err2.Error(),
+			})
 			return false
 		}
 
@@ -80,14 +88,23 @@ func MatchOrder(order models.Order) {
 			Price:       tradePrice,
 			Quantity:    matchQty,
 		}
-		err := db.InsertTrade(trade)
-		if err != nil {
-			log.Println("Trade insert failed:", err)
+
+		if err := db.InsertTrade(trade); err != nil {
+			utils.LogError("MatchOrder:InsertTrade", map[string]interface{}{
+				"error":  err.Error(),
+				"symbol": order.Symbol,
+			})
 			continue
 		}
 
-		//  Update book order
-		_ = db.DecreaseOrderQty(bookOrder.ID, matchQty)
+		if err := db.DecreaseOrderQty(bookOrder.ID, matchQty); err != nil {
+			utils.LogError("MatchOrder:DecreaseOrderQty", map[string]interface{}{
+				"error":     err.Error(),
+				"order_id":  bookOrder.ID,
+				"matched":   matchQty,
+				"remaining": bookOrder.RemainingQty - matchQty,
+			})
+		}
 
 		// Update incoming order state
 		remainingQty -= matchQty

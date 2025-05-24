@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 	"order-matching-engine/db"
+	"order-matching-engine/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -10,17 +11,17 @@ import (
 func ListTrades(c *gin.Context) {
 	symbol := c.Query("symbol")
 	if symbol == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "symbol is required"})
+		utils.SendError(c, http.StatusBadRequest, "Symbol is required")
 		return
 	}
 
 	trades, err := db.GetTradesBySymbol(symbol)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.SendError(c, http.StatusInternalServerError, "Failed to fetch trades")
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	utils.SendSuccess(c, http.StatusOK, "Trades fetched", map[string]interface{}{
 		"symbol": symbol,
 		"trades": trades,
 	})

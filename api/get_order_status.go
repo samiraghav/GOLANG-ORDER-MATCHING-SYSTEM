@@ -1,9 +1,9 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"order-matching-engine/db"
+	"order-matching-engine/utils"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -13,20 +13,17 @@ func GetOrderStatus(c *gin.Context) {
 	orderIDStr := c.Param("id")
 	orderID, err := strconv.ParseInt(orderIDStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid order ID"})
+		utils.SendError(c, http.StatusBadRequest, "Invalid order ID")
 		return
 	}
-	fmt.Println("orderID", orderID)
 
 	order, err := db.GetOrderByID(orderID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "order not found", "details": err.Error()})
+		utils.SendError(c, http.StatusNotFound, "Order not found")
 		return
 	}
 
-	fmt.Println("order", order)
-
-	c.JSON(http.StatusOK, gin.H{
+	utils.SendSuccess(c, http.StatusOK, "Order status", map[string]interface{}{
 		"order_id":           order.ID,
 		"symbol":             order.Symbol,
 		"side":               order.Side,

@@ -5,6 +5,7 @@ import (
 	"order-matching-engine/db"
 	"order-matching-engine/models"
 	"order-matching-engine/service"
+	"order-matching-engine/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,7 +21,7 @@ type PlaceOrderRequest struct {
 func PlaceOrder(c *gin.Context) {
 	var req PlaceOrderRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		utils.SendError(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -36,12 +37,14 @@ func PlaceOrder(c *gin.Context) {
 
 	insertedID, err := db.InsertOrder(&order)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to place order"})
+		utils.SendError(c, http.StatusInternalServerError, "Failed to place order")
 		return
 	}
 
 	order.ID = insertedID
 	go service.MatchOrder(order)
 
-	c.JSON(http.StatusOK, gin.H{"message": "order placed", "order_id": insertedID})
+	utils.SendSuccess(c, http.StatusOK, "Order placed", map[string]interface{}{
+		"order_id": insertedID,
+	})
 }

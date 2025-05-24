@@ -22,8 +22,10 @@ func MatchOrder(order models.Order) {
 
 	// Sort by price-time priority
 	sort.SliceStable(orders, func(i, j int) bool {
-		timeI, err1 := time.Parse(time.RFC3339, orders[i].CreatedAt)
-		timeJ, err2 := time.Parse(time.RFC3339, orders[j].CreatedAt)
+		const layout = "2006-01-02 15:04:05"
+		timeI, err1 := time.Parse(layout, orders[i].CreatedAt)
+		timeJ, err2 := time.Parse(layout, orders[j].CreatedAt)
+
 		if err1 != nil || err2 != nil {
 			log.Println("Time parse error in order sorting:", err1, err2)
 			return false

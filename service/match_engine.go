@@ -69,7 +69,7 @@ func MatchOrder(order models.Order) {
 		}
 
 		if !priceMatch {
-			break
+			continue
 		}
 
 		// Calculate match quantity

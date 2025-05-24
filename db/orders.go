@@ -67,9 +67,21 @@ func GetOrderByID(orderID int64) (*models.Order, error) {
 }
 
 func GetOrdersBySymbolAndSide(symbol, side string) ([]models.Order, error) {
-	query := `SELECT * FROM orders WHERE symbol = ? AND side = ? AND status = 'open' ORDER BY price DESC, created_at ASC`
+	query := `SELECT * FROM orders 
+          WHERE symbol = ? 
+          AND side = ? 
+          AND type = 'limit' 
+          AND status = 'open' 
+          AND remaining_quantity > 0
+          ORDER BY price DESC, created_at ASC`
 	if side == "sell" {
-		query = `SELECT * FROM orders WHERE symbol = ? AND side = ? AND status = 'open' ORDER BY price ASC, created_at ASC`
+		query = `SELECT * FROM orders 
+             WHERE symbol = ? 
+             AND side = ? 
+             AND type = 'limit' 
+             AND status = 'open' 
+             AND remaining_quantity > 0
+             ORDER BY price ASC, created_at ASC`
 	}
 
 	rows, err := DB.Query(query, symbol, side)

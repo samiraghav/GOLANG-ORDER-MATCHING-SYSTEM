@@ -16,12 +16,19 @@ func MatchOrder(order models.Order) {
 	}
 
 	orders, err := db.GetOpenOrders(order.Symbol, oppositeSide)
-	if err != nil || len(orders) == 0 {
+	if err != nil {
 		utils.LogError("MatchOrder:GetOpenOrders", map[string]interface{}{
 			"error":  err.Error(),
 			"symbol": order.Symbol,
 			"side":   oppositeSide,
 		})
+		return
+	}
+
+	if len(orders) == 0 {
+		if order.Type == "market" {
+			_ = db.UpdateOrderStatus(order.ID, "canceled", order.RemainingQty)
+		}
 		return
 	}
 
@@ -97,13 +104,24 @@ func MatchOrder(order models.Order) {
 			continue
 		}
 
+		newRemaining := bookOrder.RemainingQty - matchQty
+
 		if err := db.DecreaseOrderQty(bookOrder.ID, matchQty); err != nil {
 			utils.LogError("MatchOrder:DecreaseOrderQty", map[string]interface{}{
 				"error":     err.Error(),
 				"order_id":  bookOrder.ID,
 				"matched":   matchQty,
-				"remaining": bookOrder.RemainingQty - matchQty,
+				"remaining": newRemaining,
 			})
+		}
+
+		if newRemaining == 0 {
+			if err := db.UpdateOrderStatus(bookOrder.ID, "filled", 0); err != nil {
+				utils.LogError("MatchOrder:FillBookOrder", map[string]interface{}{
+					"error":    err.Error(),
+					"order_id": bookOrder.ID,
+				})
+			}
 		}
 
 		// Update incoming order state

@@ -30,12 +30,13 @@ func Connect() error {
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, name)
 
-	db, err := sql.Open("mysql", dsn)
+	var err error
+	DB, err = sql.Open("mysql", dsn)
 	if err != nil {
 		return fmt.Errorf("failed to open DB: %w", err)
 	}
 
-	if err = db.Ping(); err != nil {
+	if err = DB.Ping(); err != nil {
 		return fmt.Errorf("database ping failed: %w", err)
 	}
 
